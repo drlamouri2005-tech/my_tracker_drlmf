@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useStore } from './store/useStore';
@@ -16,11 +16,106 @@ import { Profile } from './pages/Profile';
 export default function App() {
   const theme = useStore((s) => s.theme);
   const location = useLocation();
+  const savedOnce = useRef(false);
 
   useEffect(() => {
     document.documentElement.classList.toggle('light', theme === 'light');
     document.documentElement.classList.toggle('dark', theme === 'dark');
   }, [theme]);
+
+  // Per-user autosave (localStorage) — saves selected parts of the store
+  useEffect(() => {
+    const getKey = (name?: string) => `medverse-user-${encodeURIComponent((name || 'guest').toLowerCase())}`;
+
+    // try to load a per-user snapshot once after persist rehydrate
+    const loadOnce = () => {
+      if (savedOnce.current) return;
+      const st = useStore.getState();
+      const key = getKey(st.player?.name);
+      try {
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          useStore.setState({
+            modules: parsed.modules ?? st.modules,
+            tasks: parsed.tasks ?? st.tasks,
+            sessions: parsed.sessions ?? st.sessions,
+            notes: parsed.notes ?? st.notes,
+            player: parsed.player ? { ...st.player, ...parsed.player } : st.player,
+            motivationIndex: parsed.motivationIndex ?? st.motivationIndex,
+          } as any);
+        }
+      } catch (e) {
+        // ignore
+      }
+      savedOnce.current = true;
+    };
+
+    // Give persist a short moment to rehydrate then attempt load
+    const t = setTimeout(loadOnce, 250);
+
+    // Subscribe and auto-save snapshots (debounced)
+    let timer: any = null;
+    const unsub = useStore.subscribe((s) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        const key = getKey(s.player?.name);
+        const snapshot = {
+          modules: s.modules,
+          tasks: s.tasks,
+          sessions: s.sessions,
+          notes: s.notes,
+          player: s.player,
+          motivationIndex: s.motivationIndex,
+        };
+        try {
+          localStorage.setItem(key, JSON.stringify(snapshot));
+        } catch (e) {
+          // ignore quota errors
+        }
+      }, 900);
+    });
+
+    return () => {
+      clearTimeout(t);
+      clearTimeout(timer);
+      unsub();
+    };
+  }, []);
+
+  // Send a lightweight visit ping to the serverless logger on route change
+  useEffect(() => {
+    const sendVisit = () => {
+      try {
+        const s = useStore.getState();
+        const payload = {
+          path: location.pathname,
+          href: window.location.href,
+          referrer: document.referrer,
+          name: s.player?.name ?? null,
+        };
+        const body = JSON.stringify(payload);
+
+        // Prefer sendBeacon for reliability during navigation/unload
+        if (typeof navigator !== 'undefined' && 'sendBeacon' in navigator) {
+          const blob = new Blob([body], { type: 'application/json' });
+          navigator.sendBeacon('/api/visit', blob);
+        } else {
+          // fallback to fetch with keepalive when available
+          fetch('/api/visit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body,
+            keepalive: true,
+          }).catch(() => {});
+        }
+      } catch (e) {
+        // silent
+      }
+    };
+
+    sendVisit();
+  }, [location.pathname]);
 
   const isLanding = location.pathname === '/';
 
