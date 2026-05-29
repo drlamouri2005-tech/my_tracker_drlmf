@@ -1,0 +1,146 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --grid: rgba(217, 199, 167, 0.04);
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+html {
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  @apply bg-ink-900 text-beige-100 antialiased;
+  background-image:
+    radial-gradient(1200px 800px at 20% -10%, rgba(184,153,104,0.08), transparent 60%),
+    radial-gradient(900px 700px at 110% 20%, rgba(111,179,184,0.05), transparent 60%),
+    linear-gradient(180deg, #0B0907 0%, #0E0C0A 40%, #0A0907 100%);
+  background-attachment: fixed;
+  overflow-x: hidden;
+}
+
+html.light body {
+  @apply bg-beige-50 text-ink-900;
+  background-image:
+    radial-gradient(1200px 800px at 20% -10%, rgba(184,153,104,0.18), transparent 60%),
+    radial-gradient(900px 700px at 110% 20%, rgba(111,179,184,0.10), transparent 60%),
+    linear-gradient(180deg, #FBF7F0 0%, #F2EADB 100%);
+}
+
+::selection {
+  background: rgba(217, 199, 167, 0.25);
+  color: #FBF7F0;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(217, 199, 167, 0.12);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(217, 199, 167, 0.25); background-clip: padding-box; }
+
+@layer components {
+  .glass {
+    @apply relative bg-white/[0.02] backdrop-blur-xl border border-white/[0.06] rounded-2xl;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.04),
+      0 12px 40px -10px rgba(0,0,0,0.6);
+  }
+  .light .glass {
+    @apply bg-white/60 border-ink-900/[0.06];
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.6),
+      0 8px 30px -10px rgba(60,40,20,0.18);
+  }
+  .glass-strong {
+    @apply relative bg-white/[0.035] backdrop-blur-2xl border border-white/[0.08] rounded-2xl;
+  }
+  .hud-frame {
+    @apply relative rounded-2xl border border-beige-300/10 bg-gradient-to-br from-white/[0.03] to-transparent;
+    box-shadow: inset 0 0 0 1px rgba(217,199,167,0.04), 0 20px 60px -20px rgba(0,0,0,0.7);
+  }
+  .hud-frame::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(217,199,167,0.18), transparent 40%, transparent 60%, rgba(111,179,184,0.12));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+  }
+  .corner-mark {
+    @apply absolute w-3 h-3 border-beige-300/30;
+  }
+  .grid-bg {
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+  .text-gradient-gold {
+    background: linear-gradient(135deg, #F2EADB 0%, #D9C7A7 40%, #B89968 100%);
+    -webkit-background-clip: text;
+            background-clip: text;
+    color: transparent;
+  }
+  .divider-soft {
+    @apply h-px w-full bg-gradient-to-r from-transparent via-beige-300/15 to-transparent;
+  }
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium
+      bg-beige-300/90 text-ink-900 hover:bg-beige-200 transition
+      shadow-[0_8px_24px_-6px_rgba(217,199,167,0.35)]
+      active:scale-[0.98];
+  }
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm
+      border border-beige-300/15 text-beige-100/80 hover:text-beige-100 hover:border-beige-300/30
+      transition;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium
+      border border-beige-300/15 bg-white/[0.02] text-beige-200/80;
+  }
+  .label-mono {
+    @apply font-mono text-[10px] tracking-[0.18em] uppercase text-beige-300/60;
+  }
+}
+
+@layer utilities {
+  .mask-fade-b {
+    -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+            mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+  }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+/* Ambient particles canvas overlay */
+.particles-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.55;
+}
+
+/* Page transition stage */
+.stage {
+  position: relative;
+  z-index: 1;
+}

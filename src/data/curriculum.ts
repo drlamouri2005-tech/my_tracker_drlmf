@@ -1,0 +1,210 @@
+import type { Lesson, Module } from '../types';
+
+// Source: Programme 3ème Année Médecine 2025-2026 (provided TXT)
+
+const mk = (moduleId: string, index: number, title: string, subgroup?: string): Lesson => ({
+  id: `${moduleId}-${index}`,
+  moduleId,
+  index,
+  title,
+  subgroup,
+  status: 'todo',
+  confidence: 0,
+  durationMin: 0,
+  priority: 'med',
+  notes: '',
+  revisions: 0,
+  updatedAt: Date.now(),
+});
+
+const microbio: Lesson[] = [
+  'Introduction au monde microbien : Structure et anatomie fonctionnelle',
+  'Microbiotes humains',
+  'Manifestations du conflit hôte-bactérie',
+  'Physiologie bactérienne',
+  'Génétique bactérienne',
+  'Les Antibiotiques : Classification',
+  'Les Antibiotiques : Les résistances',
+  'Rôle du laboratoire dans le suivi du traitement antibiotique',
+  'Antiseptiques, désinfectants et stérilisation',
+  'Les bactéries anaérobies',
+  'Les vaccins bactériens',
+  'Hygiène hospitalière',
+  'Biosécurité et biosûreté dans un laboratoire de microbiologie',
+  'Les principaux groupes bactériens : Cocci à Gram+ et Gram−',
+  'Bacilles à Gram− (1) : Entérobactéries, Pseudomonas et Vibrionaceae',
+  'Bacilles à Gram− (2) : Haemophilus, Bordetella, Brucella, Campylobacter, Hélicobacter, Legionelles',
+  'Bacilles à Gram+ : Listeria, Corynébacterium, Bacillus et Mycobactéries',
+  'Diagnostic bactériologique : prélèvements et méthodes de diagnostic',
+  'Les Virus : Définition, Structure et Classification',
+  'Multiplication des Virus dans l’organisme',
+  'Physiopathologie des Infections virales',
+  'Virus à ADN (1) : Herpesviridae',
+  'Virus à ADN (2) : Adenovirus, Papillomavirus, Hepadnavirus',
+  'Virus à ARN (1) : Virus des Hépatites C, A, D et E',
+  'Virus à ARN (2) : Picornaviridae, Rétroviridae',
+  'Virus à ARN (3) : Orthomyxoviridae, Paramyxoviridae',
+  'Diagnostic Virologique',
+  'Traitement et Prévention des Infections Virales',
+].map((t, i) => mk('microbio', i + 1, t));
+
+const parasitoMyco: Lesson[] = [
+  ...[
+    'Introduction à la parasitologie',
+    'Amibes – Amoeboses / Amibes libres',
+    'Flagellés intestinaux et urogénitaux – Ciliés',
+    'Cryptosporidiose, Isosporose, Sarcocystose, Cyclosporose, Blastocystose',
+    'Flagellés sanguicoles et tissulaires (I) : Leishmanies & Leishmanioses',
+    'Flagellés sanguicoles et tissulaires (II) : Trypanosomes – Trypanosomoses',
+    'Plasmodiums – Paludisme',
+    'Toxoplasme – Toxoplasmose',
+    'Généralités sur les helminthes / Cestodes parasites adultes',
+    'Cestodes parasites à l’état larvaire',
+    'Douves – Distomatoses',
+    'Schistosomes – Schistosomoses',
+    'Nématodes et nématodoses à transmission per-os',
+    'Nématodes et nématodoses à transmission transcutanée',
+    'Filaires – Filarioses',
+    'Notion d’entomologie médicale',
+  ].map((t, i) => mk('parasito', i + 1, t, 'Parasitologie')),
+  ...[
+    'Introduction à la mycologie',
+    'Candida – Candidoses / Malasseziose',
+    'Cryptococcose / Pneumocystose / Microsporidioses',
+    'Dermatophytes – Dermatophyties',
+    'Aspergillus – Aspergilloses',
+    'Mycétomes / Sporotrichose',
+    'Histoplasmoses, Blastomycoses, Coccidioidomycose, Paracoccidioidomycose',
+    'Mucormycoses / Fusarioses / Zygomycoses',
+  ].map((t, i) => mk('parasito', i + 17, t, 'Mycologie')),
+];
+
+const pharmaco: Lesson[] = [
+  'Introduction à la pharmacologie',
+  'ADME',
+  'Principes de pharmacocinétique',
+  'Pharmacodynamie',
+  'La pharmacovigilance',
+  'Présentation du SNA',
+  'Sympathomimétiques',
+  'Sympatholytiques',
+  'Parasympathomimétiques',
+  'Parasympatholytiques',
+  'Myorelaxants',
+  'Principes de l’activité anti-bactérienne',
+  'Les Antibiotiques',
+  'Les anti-inflammatoires non stéroïdiens',
+  'Les corticoïdes',
+  'Les antidiabétiques',
+  'Les antihypertenseurs',
+  'Séance de révision',
+].map((t, i) => mk('pharmaco', i + 1, t));
+
+const biochim: Lesson[] = [
+  'Exploration des fonctions hépatiques',
+  'Exploration de la digestion et de l’absorption',
+  'Exploration des dysprotéinémies',
+  'Exploration du métabolisme de l’acide urique',
+  'Marqueurs tumoraux sériques et tissulaires',
+].map((t, i) => mk('biochim', i + 1, t));
+
+const physiopath: Lesson[] = [
+  'Physiopathologie des occlusions intestinales aiguës',
+  'Physiopathologie des dyscalcémies',
+  'Physiopathologie des ictères',
+  'Physiopathologie des troubles de l’hémostase',
+  'Physiopathologie de l’hypertension portale',
+].map((t, i) => mk('physiopath', i + 1, t));
+
+const radio: Lesson[] = [
+  'Initiation à l’exploration de l’appareil digestif : ASP, Échographie',
+  'Initiation à l’exploration de l’appareil digestif : TDM et IRM',
+].map((t, i) => mk('radio', i + 1, t));
+
+export const CURRICULUM: Module[] = [
+  {
+    id: 'microbio',
+    code: 'M1',
+    name: 'Microbiologie Médicale',
+    short: 'Microbiologie',
+    color: '#6FB3B8',
+    accent: '#3E7D80',
+    examDate: '2026-06-24',
+    description:
+      'Bactériologie, virologie, hygiène hospitalière, antibiotiques et diagnostic microbiologique.',
+    lessons: microbio,
+  },
+  {
+    id: 'parasito',
+    code: 'M2',
+    name: 'Parasitologie – Mycologie',
+    short: 'Parasito-Myco',
+    color: '#B89968',
+    accent: '#7A6442',
+    examDate: '2026-06-25',
+    description:
+      'Protozoaires, helminthes, entomologie, et mycologie médicale. Examen partiel : 30/04/2026.',
+    lessons: parasitoMyco,
+  },
+  {
+    id: 'pharmaco',
+    code: 'M3',
+    name: 'Pharmacologie',
+    short: 'Pharmaco',
+    color: '#D9C7A7',
+    accent: '#9C8055',
+    examDate: undefined,
+    description:
+      'Bases de la pharmacocinétique, pharmacodynamie, SNA, antibactériens et classes thérapeutiques.',
+    lessons: pharmaco,
+  },
+  {
+    id: 'biochim',
+    code: 'M4',
+    name: 'Biochimie Clinique (UEI 4)',
+    short: 'Biochimie',
+    color: '#C8553D',
+    accent: '#8E3A28',
+    examDate: '2026-06-21',
+    description: 'Exploration biochimique des grandes fonctions et marqueurs tumoraux.',
+    lessons: biochim,
+  },
+  {
+    id: 'physiopath',
+    code: 'M5',
+    name: 'Physiopathologie (UEI 4)',
+    short: 'Physiopath',
+    color: '#A89A8C',
+    accent: '#5C6470',
+    examDate: undefined,
+    description: 'Mécanismes physiopathologiques des grandes urgences digestives et hémostatiques.',
+    lessons: physiopath,
+  },
+  {
+    id: 'radio',
+    code: 'M6',
+    name: 'Radiologie / Imagerie (UEI 4)',
+    short: 'Imagerie',
+    color: '#7FA9C7',
+    accent: '#3E5F7A',
+    examDate: undefined,
+    description: 'Initiation à l’exploration de l’appareil digestif : ASP, écho, TDM, IRM.',
+    lessons: radio,
+  },
+];
+
+export const MOTIVATIONAL_QUOTES: string[] = [
+  'Calm hands. Clear mind. Surgical focus.',
+  'Discipline is the architecture of genius.',
+  'You are not studying — you are refining a master.',
+  'A good doctor treats. A great one anticipates.',
+  'Greatness is the daily tax paid in quiet hours.',
+  'Excellence is quiet. Mediocrity is loud.',
+  'Master the lesson; the exam will be a formality.',
+  'The world is not won by intensity. It is won by repetition.',
+  'Every page read is a patient saved.',
+  'Be the silence in the chaos of the ward.',
+  'The scalpel of the mind is sharpened in solitude.',
+  'Knowledge is the only weapon that never dulls.',
+  'You have the title. Now earn the legend.',
+];
