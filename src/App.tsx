@@ -3,6 +3,7 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useStore } from './store/useStore';
 import { Layout } from './components/layout/Layout';
+import { MobileCorner } from './components/layout/MobileCorner';
 import { Landing } from './pages/Landing';
 import { Dashboard } from './pages/Dashboard';
 import { Modules } from './pages/Modules';
@@ -148,6 +149,7 @@ export default function App() {
             </Routes>
           </Layout>
         )}
+        <MobileCorner />
       </motion.div>
     </AnimatePresence>
   );
