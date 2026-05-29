@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   MoreVertical,
   LayoutDashboard,
@@ -21,6 +21,8 @@ const items = [
 
 export function MobileCorner() {
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (!open) return;
@@ -60,21 +62,29 @@ export function MobileCorner() {
           style={{ paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}
         >
           <nav className="flex flex-col gap-1">
-            {items.map(({ to, label, icon: Icon }) => (
-              <NavLink
-                key={to}
-                to={to}
-                onClick={() => setOpen(false)}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-md text-sm transition ${
-                    isActive ? 'bg-white/[0.04] text-beige-100' : 'text-beige-100/80 hover:text-beige-100'
-                  }`
-                }
-              >
-                <Icon size={16} className="shrink-0" />
-                <span className="truncate">{label}</span>
-              </NavLink>
-            ))}
+            {items.map(({ to, label, icon: Icon }) => {
+              const active = location.pathname === to || location.pathname.startsWith(to + '/');
+              return (
+                <button
+                  key={to}
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    navigate(to);
+                  }}
+                  onTouchStart={() => {
+                    setOpen(false);
+                    navigate(to);
+                  }}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition ${
+                    active ? 'bg-white/[0.04] text-beige-100' : 'text-beige-100/80 hover:text-beige-100'
+                  }`}
+                >
+                  <Icon size={16} className="shrink-0" />
+                  <span className="truncate">{label}</span>
+                </button>
+              );
+            })}
           </nav>
         </div>
       )}
