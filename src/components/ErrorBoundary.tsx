@@ -22,7 +22,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     // You could send this to a remote logging endpoint
-    // eslint-disable-next-line no-console
+     
     console.error('Unhandled error', error, info);
     this.setState({ error, info });
   }
