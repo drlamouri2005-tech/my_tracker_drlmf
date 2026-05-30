@@ -31,10 +31,10 @@ export function Focus() {
 
   useEffect(() => {
     if (!running) return;
-    console.debug('Focus: starting interval, remaining=', remaining, 'mode=', mode);
+    if (import.meta.env.DEV) console.debug('Focus: starting interval, remaining=', remaining, 'mode=', mode);
     const t = setInterval(() => {
       setRemaining((r) => {
-        console.debug('Focus tick, remaining before=', r);
+        if (import.meta.env.DEV) console.debug('Focus tick, remaining before=', r);
         if (r <= 1) {
           clearInterval(t);
           finishCycle();
@@ -44,11 +44,11 @@ export function Focus() {
       });
     }, 1000);
     return () => clearInterval(t);
-    // eslint-disable-next-line
+    
   }, [running]);
 
   const finishCycle = () => {
-    console.debug('Focus.finishCycle called, mode=', mode, 'startedAtRef=', startedAtRef.current);
+    if (import.meta.env.DEV) console.debug('Focus.finishCycle called, mode=', mode, 'startedAtRef=', startedAtRef.current);
     if (mode === 'work' && startedAtRef.current) {
       const startedAt = startedAtRef.current;
       const endedAt = Date.now();
@@ -69,14 +69,14 @@ export function Focus() {
   };
 
   const toggle = () => {
-    console.debug('Focus.toggle called, running=', running, 'mode=', mode, 'startedAtRef=', startedAtRef.current);
+    if (import.meta.env.DEV) console.debug('Focus.toggle called, running=', running, 'mode=', mode, 'startedAtRef=', startedAtRef.current);
     if (!running) {
       if (!startedAtRef.current && mode === 'work') startedAtRef.current = Date.now();
       setRunning(true);
-      console.debug('Focus: started, startedAtRef=', startedAtRef.current);
+      if (import.meta.env.DEV) console.debug('Focus: started, startedAtRef=', startedAtRef.current);
     } else {
       setRunning(false);
-      console.debug('Focus: paused');
+      if (import.meta.env.DEV) console.debug('Focus: paused');
     }
   };
 
