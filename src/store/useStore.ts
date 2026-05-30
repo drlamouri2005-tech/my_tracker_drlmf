@@ -9,6 +9,7 @@ import type {
   NoteDoc,
   PlayerState,
   Task,
+  CalendarEvent,
 } from '../types';
 
 export type Theme = 'dark' | 'light';
@@ -21,12 +22,14 @@ interface StoreState {
   tasks: Task[];
   sessions: FocusSession[];
   notes: NoteDoc[];
+  calendarEvents: CalendarEvent[];
   player: PlayerState;
   motivationIndex: number;
 
   // module/lesson ops
   updateLesson: (moduleId: string, lessonId: string, patch: Partial<Lesson>) => void;
   resetCurriculum: () => void;
+  setModuleExamDate: (moduleId: string, date?: string | null) => void;
 
   // tasks
   addTask: (title: string, priority?: Task['priority'], moduleId?: string) => void;
@@ -37,6 +40,12 @@ interface StoreState {
 
   // sessions
   addSession: (s: Omit<FocusSession, 'id'>) => void;
+  removeSession: (id: string) => void;
+
+  // calendar events
+  addCalendarEvent: (e: Omit<CalendarEvent, 'id'>) => string;
+  updateCalendarEvent: (id: string, patch: Partial<CalendarEvent>) => void;
+  removeCalendarEvent: (id: string) => void;
 
   // notes
   addNote: (title: string, body?: string, moduleId?: string) => string;
@@ -76,6 +85,7 @@ export const useStore = create<StoreState>()(
       modules: CURRICULUM,
       tasks: [],
       sessions: [],
+      calendarEvents: [],
       notes: [],
       motivationIndex: 0,
       player: {
@@ -102,6 +112,11 @@ export const useStore = create<StoreState>()(
         })),
       resetCurriculum: () => set({ modules: CURRICULUM }),
 
+      setModuleExamDate: (moduleId, date) =>
+        set((s) => ({
+          modules: s.modules.map((m) => (m.id === moduleId ? { ...m, examDate: date ?? undefined } : m)),
+        })),
+
       addTask: (title, priority = 'med', moduleId) =>
         set((s) => ({
           tasks: [
@@ -119,8 +134,7 @@ export const useStore = create<StoreState>()(
             },
           ],
         })),
-      updateTask: (id, patch) =>
-        set((s) => ({ tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...patch } : t)) })),
+      updateTask: (id, patch) => set((s) => ({ tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...patch } : t)) })),
       removeTask: (id) => set((s) => ({ tasks: s.tasks.filter((t) => t.id !== id) })),
       reorderTasks: (ids) =>
         set((s) => ({
@@ -143,12 +157,20 @@ export const useStore = create<StoreState>()(
         const minutes = Math.round(s.durationSec / 60);
         get().awardXP(Math.max(5, minutes), 'focus');
         if (minutes >= 60) {
-          get().unlockAchievement(
-            baseAchievements.find((a) => a.id === 'focus-60')!,
-          );
+          get().unlockAchievement(baseAchievements.find((a) => a.id === 'focus-60')!);
         }
         get().registerActivity();
       },
+      removeSession: (id) => set((s) => ({ sessions: s.sessions.filter((x) => x.id !== id) })),
+
+      addCalendarEvent: (e) => {
+        const id = crypto.randomUUID();
+        set((s) => ({ calendarEvents: [...s.calendarEvents, { ...e, id }] }));
+        return id;
+      },
+      updateCalendarEvent: (id, patch) =>
+        set((s) => ({ calendarEvents: s.calendarEvents.map((c) => (c.id === id ? { ...c, ...patch } : c)) })),
+      removeCalendarEvent: (id) => set((s) => ({ calendarEvents: s.calendarEvents.filter((c) => c.id !== id) })),
 
       addNote: (title, body = '', moduleId) => {
         const id = crypto.randomUUID();
@@ -169,9 +191,7 @@ export const useStore = create<StoreState>()(
       },
 
       updateNote: (id, patch) =>
-        set((s) => ({
-          notes: s.notes.map((n) => (n.id === id ? { ...n, ...patch, updatedAt: Date.now() } : n)),
-        })),
+        set((s) => ({ notes: s.notes.map((n) => (n.id === id ? { ...n, ...patch, updatedAt: Date.now() } : n)) })),
 
       upsertNote: (n) => {
         const id = n.id ?? crypto.randomUUID();
@@ -217,8 +237,7 @@ export const useStore = create<StoreState>()(
           const today = todayKey();
           if (s.player.lastActiveDay === today) return {};
           const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-          const streak =
-            s.player.lastActiveDay === yesterday ? s.player.streak + 1 : 1;
+          const streak = s.player.lastActiveDay === yesterday ? s.player.streak + 1 : 1;
           const next = { ...s.player, streak, lastActiveDay: today };
           const ach = [...next.achievements];
           if (streak >= 3) {
@@ -244,14 +263,13 @@ export const useStore = create<StoreState>()(
           },
         })),
 
-      updatePlayer: (patch) =>
-        set((s) => ({ player: { ...s.player, ...patch } })),
+      updatePlayer: (patch) => set((s) => ({ player: { ...s.player, ...patch } })),
 
       cycleMotivation: () => set((s) => ({ motivationIndex: s.motivationIndex + 1 })),
     }),
     {
       name: 'medverse-store-v1',
-      version: 2,
+      version: 3,
       migrate: (persisted: any, _version) => {
         // Ensure persisted shape has sensible defaults to avoid runtime crashes
         const next = persisted ?? {};
@@ -259,6 +277,7 @@ export const useStore = create<StoreState>()(
         next.tasks = next.tasks ?? [];
         next.sessions = next.sessions ?? [];
         next.notes = next.notes ?? [];
+        next.calendarEvents = next.calendarEvents ?? [];
         next.motivationIndex = next.motivationIndex ?? 0;
         next.player = {
           name: 'Doctor',
@@ -283,9 +302,7 @@ export const selectModuleProgress = (m: Module) => {
   const studying = m.lessons.filter((l) => l.status === 'studying').length;
   const revision = m.lessons.filter((l) => l.status === 'revision').length;
   const todo = m.lessons.filter((l) => l.status === 'todo').length;
-  const pct = Math.round(
-    ((mastered + studying * 0.5 + revision * 0.75) / total) * 100,
-  );
+  const pct = Math.round(((mastered + studying * 0.5 + revision * 0.75) / total) * 100);
   return { pct, mastered, studying, revision, todo };
 };
 

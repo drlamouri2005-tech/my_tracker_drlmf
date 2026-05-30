@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Pause, Play, RotateCcw, Square } from 'lucide-react';
+import { Pause, Play, RotateCcw, Square, Trash2 } from 'lucide-react';
 import { useStore } from '../store/useStore';
 
 const PRESETS = [
@@ -10,7 +10,7 @@ const PRESETS = [
 ];
 
 export function Focus() {
-  const { modules, addSession, awardXP, registerActivity } = useStore();
+  const { modules, addSession, awardXP, registerActivity, sessions, removeSession } = useStore();
   const [preset, setPreset] = useState(0);
   const [mode, setMode] = useState<'work' | 'break'>('work');
   const [running, setRunning] = useState(false);
@@ -243,6 +243,50 @@ export function Focus() {
                   </div>
                 </button>
               ))}
+            </div>
+          </div>
+
+          <div className="hud-frame p-5 relative">
+            <span className="corner-mark border-t border-l top-2 left-2" />
+            <span className="corner-mark border-t border-r top-2 right-2" />
+            <span className="corner-mark border-b border-l bottom-2 left-2" />
+            <span className="corner-mark border-b border-r bottom-2 right-2" />
+            <div className="label-mono mb-3">SESSIONS HISTORY</div>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {sessions.length === 0 && (
+                <div className="text-sm text-beige-100/60">No sessions yet.</div>
+              )}
+              {sessions
+                .slice()
+                .sort((a, b) => b.startedAt - a.startedAt)
+                .slice(0, 50)
+                .map((s) => {
+                  const started = new Date(s.startedAt);
+                  const label = started.toLocaleString();
+                  const mins = Math.round(s.durationSec / 60);
+                  const module = modules.find((m) => m.id === s.moduleId);
+                  return (
+                    <div key={s.id} className="flex items-center justify-between gap-3 p-2 rounded-md bg-white/[0.02]">
+                      <div>
+                        <div className="text-sm text-beige-100/90">{module ? `${module.code} · ${module.name}` : 'Unassigned'}</div>
+                        <div className="label-mono text-[11px]">{label} · {mins}m</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            // confirm delete
+                            if (!confirm('Delete this session?')) return;
+                            removeSession(s.id);
+                          }}
+                          className="btn-ghost !px-2"
+                          title="Delete session"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
             </div>
           </div>
 

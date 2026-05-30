@@ -56,6 +56,17 @@ export interface FocusSession {
   label?: string;
 }
 
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  date: string; // ISO date YYYY-MM-DD
+  time?: string; // optional time HH:MM
+  durationMin?: number;
+  notes?: string;
+  color?: string; // optional hex color
+  moduleId?: string; // optional link to a module
+}
+
 export interface Achievement {
   id: string;
   title: string;
