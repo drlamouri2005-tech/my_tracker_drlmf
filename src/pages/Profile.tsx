@@ -6,7 +6,7 @@ import {
   selectOverallProgress,
   useStore,
   xpForLevel,
-} from '../store/useStore';
+} from '../store';
 import { Ring } from '../components/ui/Ring';
 
 export function Profile() {

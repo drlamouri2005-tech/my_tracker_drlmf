@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Plus, Trash2 } from 'lucide-react';
-import { useStore } from '../store/useStore';
+import { useStore } from '../store';
 
 export function Notes() {
   const { notes, modules, addNote, updateNote, removeNote } = useStore();

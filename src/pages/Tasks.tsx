@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Trash2, Check } from 'lucide-react';
-import { useStore } from '../store/useStore';
+import { useStore } from '../store';
 import type { Priority } from '../types';
 
 const priorityMeta: Record<Priority, { label: string; color: string }> = {

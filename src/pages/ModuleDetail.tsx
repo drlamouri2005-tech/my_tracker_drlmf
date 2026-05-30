@@ -2,7 +2,7 @@ import { Link, useParams } from 'react-router-dom';
 import { useMemo, useState } from 'react';
 import { ArrowLeft, CheckCircle2, Circle, CircleDot, RotateCcw } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { selectModuleProgress, useStore } from '../store/useStore';
+import { selectModuleProgress, useStore } from '../store';
 import { Ring } from '../components/ui/Ring';
 import type { LessonStatus } from '../types';
 

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Pause, Play, RotateCcw, Square, Trash2 } from 'lucide-react';
-import { useStore } from '../store/useStore';
+import { useStore } from '../store';
 
 const PRESETS = [
   { label: 'Deep focus', work: 50, break: 10 },

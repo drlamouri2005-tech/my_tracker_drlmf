@@ -9,7 +9,7 @@ import {
   ArrowUpRight,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { selectModuleProgress, selectOverallProgress, useStore, xpForLevel } from '../store/useStore';
+import { selectModuleProgress, selectOverallProgress, useStore, xpForLevel } from '../store';
 import { Panel } from '../components/ui/Panel';
 import { Ring } from '../components/ui/Ring';
 import { StatPill } from '../components/ui/StatPill';

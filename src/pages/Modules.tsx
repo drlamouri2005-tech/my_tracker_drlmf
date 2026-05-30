@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, CalendarClock } from 'lucide-react';
-import { selectModuleProgress, useStore } from '../store/useStore';
+import { selectModuleProgress, useStore } from '../store';
 import { Ring } from '../components/ui/Ring';
 
 export function Modules() {

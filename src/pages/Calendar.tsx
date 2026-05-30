@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Flame, Pencil, Trash2, Plus, Clock } from 'lucide-react';
-import { useStore } from '../store/useStore';
+import { useStore } from '../store';
 
 function startOfMonth(d: Date) {
   return new Date(d.getFullYear(), d.getMonth(), 1);

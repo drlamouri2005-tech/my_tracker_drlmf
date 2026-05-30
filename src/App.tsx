@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useStore } from './store/useStore';
+import { useStore } from './store';
 import { Layout } from './components/layout/Layout';
 import { MobileCorner } from './components/layout/MobileCorner';
 import { Landing } from './pages/Landing';
@@ -121,7 +121,7 @@ export default function App() {
   const isLanding = location.pathname === '/';
 
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence>
       <motion.div
         key={location.pathname}
         initial={{ opacity: 0, y: 8 }}
