@@ -7,7 +7,6 @@ import {
   CalendarDays,
   NotebookText,
   Trophy,
-  Stethoscope,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -25,8 +24,8 @@ export function Sidebar() {
   return (
     <aside className="hidden md:flex flex-col gap-1 sticky top-0 h-screen w-[230px] shrink-0 px-4 py-6 border-r border-beige-300/[0.06] bg-black/20 backdrop-blur-xl">
       <NavLink to="/" className="flex items-center gap-2.5 px-2 mb-6 group">
-        <div className="relative w-9 h-9 rounded-xl bg-beige-300/10 border border-beige-300/15 grid place-items-center overflow-hidden">
-          <Stethoscope size={18} className="text-beige-200" />
+        <div className="relative w-9 h-9 rounded-xl bg-beige-300/10 border border-beige-300/15 overflow-hidden">
+          <img src="/logo.jpg" alt="MedVerse" className="w-full h-full object-cover" />
           <motion.div
             className="absolute inset-0 bg-gradient-to-tr from-beige-300/20 to-transparent"
             animate={{ opacity: [0.2, 0.5, 0.2] }}
