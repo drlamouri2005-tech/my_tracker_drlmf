@@ -12,6 +12,7 @@ import { Tasks } from './pages/Tasks';
 import { Focus } from './pages/Focus';
 import { CalendarPage } from './pages/Calendar';
 import { Notes } from './pages/Notes';
+import { Translation } from './pages/Translation';
 import { Profile } from './pages/Profile';
 
 export default function App() {
@@ -144,6 +145,7 @@ export default function App() {
               <Route path="/focus" element={<Focus />} />
               <Route path="/calendar" element={<CalendarPage />} />
               <Route path="/notes" element={<Notes />} />
+              <Route path="/translation" element={<Translation />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="*" element={<Dashboard />} />
             </Routes>

@@ -7,6 +7,7 @@ import {
   ListTodo,
   Timer,
   NotebookText,
+  Languages,
   Trophy,
 } from 'lucide-react';
 
@@ -16,6 +17,7 @@ const items = [
   { to: '/tasks', label: 'Tasks', icon: ListTodo },
   { to: '/focus', label: 'Focus', icon: Timer },
   { to: '/notes', label: 'Notes', icon: NotebookText },
+  { to: '/translation', label: 'Translation', icon: Languages },
   { to: '/profile', label: 'Profile', icon: Trophy },
 ];
 

@@ -6,6 +6,7 @@ import {
   Timer,
   CalendarDays,
   NotebookText,
+  Languages,
   Trophy,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -17,6 +18,7 @@ const items = [
   { to: '/focus', label: 'Focus', icon: Timer },
   { to: '/calendar', label: 'Calendar', icon: CalendarDays },
   { to: '/notes', label: 'Notes', icon: NotebookText },
+  { to: '/translation', label: 'Translation', icon: Languages },
   { to: '/profile', label: 'Profile', icon: Trophy },
 ];
 
