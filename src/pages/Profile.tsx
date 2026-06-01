@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Award, Flame, Pencil, Sparkles, Timer, TrendingUp, Trophy } from 'lucide-react';
+import { Award, Camera, Check, Flame, ImageIcon, Pencil, Sparkles, Timer, TrendingUp, Trash2, Trophy } from 'lucide-react';
 import {
   selectModuleProgress,
   selectOverallProgress,
@@ -8,12 +8,59 @@ import {
   xpForLevel,
 } from '../store';
 import { Ring } from '../components/ui/Ring';
+import { WALLPAPERS, getWallpaper, type WallpaperCategory } from '../data/wallpapers';
+
+// Resize a File into a square data URL ≤ 256×256 to keep localStorage tame.
+async function fileToAvatarDataUrl(file: File, size = 256): Promise<string> {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise<HTMLImageElement>((res, rej) => {
+      const el = new Image();
+      el.onload = () => res(el);
+      el.onerror = rej;
+      el.src = url;
+    });
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('canvas-2d unavailable');
+    // cover-fit crop
+    const scale = Math.max(size / img.width, size / img.height);
+    const w = img.width * scale;
+    const h = img.height * scale;
+    ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+    return canvas.toDataURL('image/jpeg', 0.85);
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
 
 export function Profile() {
   const { modules, player, sessions, tasks, notes, updatePlayer } = useStore();
   const [editing, setEditing] = useState(false);
   const [nameDraft, setNameDraft] = useState(player.name);
   const [titleDraft, setTitleDraft] = useState(player.title);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [avatarErr, setAvatarErr] = useState<string | null>(null);
+
+  const onPickAvatar = async (file?: File | null) => {
+    if (!file) return;
+    setAvatarErr(null);
+    if (!file.type.startsWith('image/')) {
+      setAvatarErr('Please choose an image file.');
+      return;
+    }
+    try {
+      const dataUrl = await fileToAvatarDataUrl(file);
+      updatePlayer({ avatar: dataUrl });
+    } catch {
+      setAvatarErr('Could not read that image.');
+    }
+  };
+
+  const clearAvatar = () => updatePlayer({ avatar: undefined });
+  const currentBg = getWallpaper(player.background);
 
   const saveIdentity = () => {
     const name = nameDraft.trim() || 'Doctor';
@@ -96,13 +143,57 @@ export function Profile() {
         <div className="absolute -top-32 -right-20 w-96 h-96 rounded-full opacity-25 blur-3xl bg-beige-300" />
 
         <div className="flex flex-wrap items-center gap-8 relative">
-          <div className="relative">
-            <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-beige-300 to-gold-800 grid place-items-center font-display text-5xl text-ink-900 shadow-elev-2">
-              {player.name.charAt(0)}
-            </div>
+          <div className="relative group/avatar">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              title={player.avatar ? 'Replace portrait' : 'Upload portrait'}
+              className="w-32 h-32 rounded-2xl overflow-hidden bg-gradient-to-br from-beige-300 to-gold-800 grid place-items-center font-display text-5xl text-ink-900 shadow-elev-2 relative focus:outline-none focus:ring-2 focus:ring-beige-300/40"
+            >
+              {player.avatar ? (
+                <img
+                  src={player.avatar}
+                  alt={`${player.name}'s portrait`}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  draggable={false}
+                />
+              ) : (
+                <span>{player.name.charAt(0)}</span>
+              )}
+              <span className="absolute inset-0 bg-ink-900/60 opacity-0 group-hover/avatar:opacity-100 transition-opacity grid place-items-center text-beige-100">
+                <Camera size={20} />
+              </span>
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                onPickAvatar(f);
+                // allow re-selecting the same file
+                e.target.value = '';
+              }}
+            />
+            {player.avatar && (
+              <button
+                type="button"
+                onClick={clearAvatar}
+                title="Remove portrait"
+                className="absolute -top-2 -left-2 w-7 h-7 rounded-full bg-ink-800 border border-beige-300/30 grid place-items-center text-beige-100/70 hover:text-red-300 hover:border-red-300/40 transition"
+              >
+                <Trash2 size={12} />
+              </button>
+            )}
             <div className="absolute -bottom-2 -right-2 px-2.5 py-1 rounded-full bg-ink-800 border border-beige-300/30 label-mono">
               LVL {player.level}
             </div>
+            {avatarErr && (
+              <div className="absolute -bottom-8 left-0 right-0 text-center text-[10px] text-red-300/80">
+                {avatarErr}
+              </div>
+            )}
           </div>
           <div className="flex-1 min-w-[260px]">
             {editing ? (
@@ -289,6 +380,81 @@ export function Profile() {
             );
           })}
         </div>
+      </div>
+
+      {/* Atmosphere — wallpaper picker */}
+      <div className="hud-frame p-6 relative">
+        <span className="corner-mark border-t border-l top-2 left-2" />
+        <span className="corner-mark border-t border-r top-2 right-2" />
+        <span className="corner-mark border-b border-l bottom-2 left-2" />
+        <span className="corner-mark border-b border-r bottom-2 right-2" />
+
+        <div className="flex items-center justify-between mb-1 gap-3 flex-wrap">
+          <div>
+            <h3 className="font-display text-xl flex items-center gap-2">
+              <ImageIcon size={16} className="text-beige-300/80" />
+              Atmosphere
+            </h3>
+            <p className="text-xs text-beige-100/55 mt-1">
+              Set the stage. Currently:{' '}
+              <span className="text-beige-100/85">{currentBg.name}</span>
+              <span className="text-beige-100/40"> · {currentBg.caption}</span>
+            </p>
+          </div>
+          {player.background && player.background !== 'default' && (
+            <button
+              type="button"
+              onClick={() => updatePlayer({ background: 'default' })}
+              className="btn-ghost text-xs px-3 py-1.5"
+            >
+              Reset to ambient
+            </button>
+          )}
+        </div>
+
+        {(['default', 'medical', 'monster'] as WallpaperCategory[]).map((cat) => {
+          const items = WALLPAPERS.filter((w) => w.category === cat);
+          if (!items.length) return null;
+          const heading =
+            cat === 'default' ? 'Default' : cat === 'medical' ? 'Medical' : 'Monster — Naoki Urasawa';
+          return (
+            <div key={cat} className="mt-5">
+              <div className="label-mono mb-2">◗ {heading.toUpperCase()}</div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                {items.map((w) => {
+                  const active = (player.background ?? 'default') === w.id;
+                  return (
+                    <button
+                      key={w.id}
+                      type="button"
+                      onClick={() => updatePlayer({ background: w.id })}
+                      className={`group relative rounded-xl overflow-hidden border text-left transition shadow-elev-1 hover:shadow-elev-2 ${
+                        active
+                          ? 'border-beige-300/60 ring-1 ring-beige-300/40'
+                          : 'border-beige-300/10 hover:border-beige-300/30'
+                      }`}
+                      title={w.caption}
+                    >
+                      <div
+                        className="h-20 w-full"
+                        style={{ background: w.swatch, backgroundSize: 'cover' }}
+                      />
+                      <div className="px-3 py-2 bg-ink-800/80 backdrop-blur-sm">
+                        <div className="font-display text-sm leading-tight truncate">{w.name}</div>
+                        <div className="label-mono mt-0.5 truncate">{w.caption}</div>
+                      </div>
+                      {active && (
+                        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-beige-300 text-ink-900 grid place-items-center shadow-elev-1">
+                          <Check size={12} strokeWidth={3} />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

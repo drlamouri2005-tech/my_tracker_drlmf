@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useStore } from './store';
+import { getWallpaper } from './data/wallpapers';
 import { Layout } from './components/layout/Layout';
 import { MobileCorner } from './components/layout/MobileCorner';
 import { Landing } from './pages/Landing';
@@ -17,6 +18,7 @@ import { Profile } from './pages/Profile';
 
 export default function App() {
   const theme = useStore((s) => s.theme);
+  const backgroundId = useStore((s) => s.player.background);
   const location = useLocation();
   const savedOnce = useRef(false);
 
@@ -24,6 +26,27 @@ export default function App() {
     document.documentElement.classList.toggle('light', theme === 'light');
     document.documentElement.classList.toggle('dark', theme === 'dark');
   }, [theme]);
+
+  // Apply the user-chosen wallpaper to <body>. We override the default CSS
+  // backgrounds from styles/index.css when a non-default preset is picked.
+  useEffect(() => {
+    const wp = getWallpaper(backgroundId);
+    const body = document.body;
+    if (!wp || wp.id === 'default') {
+      body.style.removeProperty('background-image');
+      body.style.removeProperty('background-color');
+      body.style.removeProperty('background-attachment');
+      body.style.removeProperty('background-size');
+      body.style.removeProperty('background-repeat');
+      return;
+    }
+    body.style.backgroundImage = wp.bg;
+    body.style.backgroundAttachment = 'fixed';
+    body.style.backgroundSize = 'auto, cover, cover, cover, cover';
+    body.style.backgroundRepeat = 'repeat, no-repeat, no-repeat, no-repeat, no-repeat';
+    if (wp.color) body.style.backgroundColor = wp.color;
+    else body.style.removeProperty('background-color');
+  }, [backgroundId, theme]);
 
   // Per-user autosave (localStorage) — saves selected parts of the store
   useEffect(() => {

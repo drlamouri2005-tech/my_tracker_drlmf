@@ -83,6 +83,10 @@ export interface PlayerState {
   streak: number;
   lastActiveDay?: string; // YYYY-MM-DD
   achievements: Achievement[];
+  /** Data URL for the user's avatar (square PNG/JPEG). Falls back to first letter when absent. */
+  avatar?: string;
+  /** Wallpaper preset id from data/wallpapers.ts. Use 'default' for the original ambient. */
+  background?: string;
 }
 
 export interface NoteDoc {
