@@ -279,6 +279,7 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.15 }}
+              style={{ minHeight: '100%' }}
             >
               <Routes location={location}>
                 <Route path="/dashboard" element={<Dashboard />} />
