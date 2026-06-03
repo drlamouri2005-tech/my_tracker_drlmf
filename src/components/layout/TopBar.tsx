@@ -1,4 +1,5 @@
 import { Moon, Sun, Sparkles } from 'lucide-react';
+import MusicControl from '../ui/MusicControl';
 import { useStore } from '../../store/useStore';
 import { MOTIVATIONAL_QUOTES } from '../../data/curriculum';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -49,6 +50,9 @@ export function TopBar() {
         >
           {theme === 'dark' ? <Moon size={15} /> : <Sun size={15} />}
         </button>
+        <div className="hidden md:flex items-center">
+          <MusicControl />
+        </div>
       </div>
     </header>
   );

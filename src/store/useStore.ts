@@ -25,6 +25,13 @@ interface StoreState {
   calendarEvents: CalendarEvent[];
   player: PlayerState;
   motivationIndex: number;
+  // music / ambience
+  musicOn: boolean;
+  musicVolume: number; // 0.0 - 1.0
+  musicTrack?: string | null;
+  setMusicOn: (on: boolean) => void;
+  setMusicVolume: (v: number) => void;
+  setMusicTrack: (t?: string | null) => void;
 
   // module/lesson ops
   updateLesson: (moduleId: string, lessonId: string, patch: Partial<Lesson>) => void;
@@ -88,6 +95,10 @@ export const useStore = create<StoreState>()(
       calendarEvents: [],
       notes: [],
       motivationIndex: 0,
+      // music defaults
+      musicOn: true,
+      musicVolume: 0.6,
+      musicTrack: null,
       player: {
         name: 'Doctor',
         title: 'Practicing Physician',
@@ -265,6 +276,11 @@ export const useStore = create<StoreState>()(
 
       updatePlayer: (patch) => set((s) => ({ player: { ...s.player, ...patch } })),
 
+      // music controls
+      setMusicOn: (on) => set(() => ({ musicOn: on })),
+      setMusicVolume: (v) => set(() => ({ musicVolume: Math.max(0, Math.min(1, v)) })),
+      setMusicTrack: (t) => set(() => ({ musicTrack: t ?? null })),
+
       cycleMotivation: () => set((s) => ({ motivationIndex: s.motivationIndex + 1 })),
     }),
     {
@@ -279,6 +295,9 @@ export const useStore = create<StoreState>()(
         next.notes = next.notes ?? [];
         next.calendarEvents = next.calendarEvents ?? [];
         next.motivationIndex = next.motivationIndex ?? 0;
+        next.musicOn = next.musicOn ?? true;
+        next.musicVolume = next.musicVolume ?? 0.6;
+        next.musicTrack = next.musicTrack ?? null;
         next.player = {
           name: 'Doctor',
           title: 'Practicing Physician',
