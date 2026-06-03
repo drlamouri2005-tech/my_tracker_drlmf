@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useLayoutEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useStore } from './store';
@@ -203,23 +203,20 @@ export default function App() {
   }, []);
 
     // Ensure SPA navigation focuses top of the new page and honors hash anchors.
-    // This prevents the problem where content for the newly chosen tab is off-screen
-    // or only visible after a manual refresh.
-    useEffect(() => {
+    // Run as a layout effect so scroll resets before paint and avoid visible blank pages.
+    useLayoutEffect(() => {
       try {
         if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
       } catch (e) {
         // ignore (some envs may restrict history)
       }
 
-      // Reset scroll positions for window and any scrollable containers inside
       const resetAllScrolls = () => {
         try {
           window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
         } catch (e) {
           // ignore
         }
-
         try {
           const els = Array.from(document.querySelectorAll('*')) as HTMLElement[];
           for (const el of els) {
@@ -232,17 +229,12 @@ export default function App() {
         } catch (e) {
           // ignore
         }
-
-        // Also clear common containers explicitly
         const stage = document.querySelector('.stage') as HTMLElement | null;
         if (stage) stage.scrollTop = 0;
         const main = document.querySelector('main') as HTMLElement | null;
         if (main) main.scrollTop = 0;
-
-        // trigger a resize to force layout reflow if any components rely on it
         try {
           window.dispatchEvent(new Event('resize'));
-          // force reflow
           void document.body.offsetHeight;
         } catch (e) {
           // ignore
@@ -250,17 +242,21 @@ export default function App() {
       };
 
       resetAllScrolls();
+      const tid = window.setTimeout(resetAllScrolls, 120);
 
-      // if the route contains a hash, scroll that element into view once mounted
       if (location.hash) {
         const id = location.hash.replace('#', '');
-        // slight delay to allow mounted content/layout to settle
-        setTimeout(() => {
+        const htid = window.setTimeout(() => {
           const el = document.getElementById(id);
           if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
           else resetAllScrolls();
-        }, 80);
+        }, 160);
+        return () => {
+          clearTimeout(htid);
+          clearTimeout(tid);
+        };
       }
+      return () => window.clearTimeout(tid);
     }, [location.pathname, location.hash]);
 
   const isLanding = location.pathname === '/';
