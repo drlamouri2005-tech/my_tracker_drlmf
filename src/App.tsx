@@ -265,45 +265,38 @@ export default function App() {
   const isLanding = location.pathname === '/';
 
   return (
-    <AnimatePresence
-      onExitComplete={() => {
-        try {
-          resetScrollRef.current?.();
-        } catch (e) {
-          // ignore
-        }
-      }}
-    >
-      <motion.div
-        key={location.pathname}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
-        className="stage"
-      >
-        {isLanding ? (
-          <Routes location={location}>
-            <Route path="/" element={<Landing />} />
-          </Routes>
-        ) : (
-          <Layout>
-            <Routes location={location}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/modules" element={<Modules />} />
-              <Route path="/modules/:id" element={<ModuleDetail />} />
-              <Route path="/tasks" element={<Tasks />} />
-              <Route path="/focus" element={<Focus />} />
-              <Route path="/calendar" element={<CalendarPage />} />
-              <Route path="/notes" element={<Notes />} />
-              <Route path="/translation" element={<Translation />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="*" element={<Dashboard />} />
-            </Routes>
-          </Layout>
-        )}
-        <MobileCorner />
-      </motion.div>
-    </AnimatePresence>
+    <div className="stage">
+      {isLanding ? (
+        <Routes location={location}>
+          <Route path="/" element={<Landing />} />
+        </Routes>
+      ) : (
+        <Layout>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.15 }}
+            >
+              <Routes location={location}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/modules" element={<Modules />} />
+                <Route path="/modules/:id" element={<ModuleDetail />} />
+                <Route path="/tasks" element={<Tasks />} />
+                <Route path="/focus" element={<Focus />} />
+                <Route path="/calendar" element={<CalendarPage />} />
+                <Route path="/notes" element={<Notes />} />
+                <Route path="/translation" element={<Translation />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="*" element={<Dashboard />} />
+              </Routes>
+            </motion.div>
+          </AnimatePresence>
+        </Layout>
+      )}
+      <MobileCorner />
+    </div>
   );
 }
