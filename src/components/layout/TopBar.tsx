@@ -50,7 +50,7 @@ export function TopBar() {
         >
           {theme === 'dark' ? <Moon size={15} /> : <Sun size={15} />}
         </button>
-        <div className="hidden md:flex items-center">
+        <div className="flex items-center">
           <MusicControl />
         </div>
       </div>
