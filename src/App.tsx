@@ -21,6 +21,7 @@ export default function App() {
   const backgroundId = useStore((s) => s.player.background);
   const location = useLocation();
   const savedOnce = useRef(false);
+  const resetScrollRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     document.documentElement.classList.toggle('light', theme === 'light');
@@ -242,6 +243,8 @@ export default function App() {
       };
 
       resetAllScrolls();
+      // expose for animation exit-complete callback
+      resetScrollRef.current = resetAllScrolls;
       const tid = window.setTimeout(resetAllScrolls, 120);
 
       if (location.hash) {
@@ -262,7 +265,15 @@ export default function App() {
   const isLanding = location.pathname === '/';
 
   return (
-    <AnimatePresence>
+    <AnimatePresence
+      onExitComplete={() => {
+        try {
+          resetScrollRef.current?.();
+        } catch (e) {
+          // ignore
+        }
+      }}
+    >
       <motion.div
         key={location.pathname}
         initial={{ opacity: 0 }}

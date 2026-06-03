@@ -148,4 +148,7 @@ html.light body {
 .stage {
   position: relative;
   z-index: 1;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
 }
