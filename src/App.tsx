@@ -142,6 +142,66 @@ export default function App() {
     sendVisit();
   }, [location.pathname]);
 
+  // Cross-tab sync: when another tab updates localStorage (or when the document
+  // becomes visible again), attempt to merge persisted state into the running
+  // store so UI reflects changes without a full reload.
+  useEffect(() => {
+    const syncFromStorage = () => {
+      try {
+        const raw = localStorage.getItem('medverse-store-v1');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          const curr = useStore.getState();
+          useStore.setState({
+            modules: parsed.modules ?? curr.modules,
+            tasks: parsed.tasks ?? curr.tasks,
+            sessions: parsed.sessions ?? curr.sessions,
+            notes: parsed.notes ?? curr.notes,
+            calendarEvents: parsed.calendarEvents ?? curr.calendarEvents,
+            player: parsed.player ? { ...curr.player, ...parsed.player } : curr.player,
+            motivationIndex: parsed.motivationIndex ?? curr.motivationIndex,
+          });
+        }
+
+        // also try the per-user autosave snapshot for the active player name
+        const userKey = `medverse-user-${encodeURIComponent((useStore.getState().player?.name || 'guest').toLowerCase())}`;
+        const rawUser = localStorage.getItem(userKey);
+        if (rawUser) {
+          const parsedU = JSON.parse(rawUser);
+          const curr = useStore.getState();
+          useStore.setState({
+            modules: parsedU.modules ?? curr.modules,
+            tasks: parsedU.tasks ?? curr.tasks,
+            sessions: parsedU.sessions ?? curr.sessions,
+            notes: parsedU.notes ?? curr.notes,
+            player: parsedU.player ? { ...curr.player, ...parsedU.player } : curr.player,
+            motivationIndex: parsedU.motivationIndex ?? curr.motivationIndex,
+          } as any);
+        }
+      } catch (e) {
+        // ignore malformed JSON or quota errors
+      }
+    };
+
+    const onStorage = (e: StorageEvent) => {
+      if (!e.key) return;
+      if (e.key === 'medverse-store-v1' || e.key.startsWith('medverse-user-')) {
+        syncFromStorage();
+      }
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') syncFromStorage();
+    };
+
+    window.addEventListener('storage', onStorage);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, []);
+
   const isLanding = location.pathname === '/';
 
   return (
