@@ -76,8 +76,8 @@ export function MusicControl() {
     setVolume(v);
   };
 
-  const onSelect = (val: string) => {
-    setMusicTrackStore(val);
+  const onSelect = (val?: string | null) => {
+    setMusicTrackStore(val ?? null);
   };
 
   const onAddLocal = (files: FileList | null) => {
