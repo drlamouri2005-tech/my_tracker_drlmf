@@ -212,8 +212,44 @@ export default function App() {
         // ignore (some envs may restrict history)
       }
 
-      // immediate reset to top for new route
-      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      // Reset scroll positions for window and any scrollable containers inside
+      const resetAllScrolls = () => {
+        try {
+          window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+        } catch (e) {
+          // ignore
+        }
+
+        try {
+          const els = Array.from(document.querySelectorAll('*')) as HTMLElement[];
+          for (const el of els) {
+            const style = getComputedStyle(el);
+            const oy = style.overflowY;
+            if ((oy === 'auto' || oy === 'scroll') && el.scrollHeight > el.clientHeight) {
+              el.scrollTop = 0;
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
+
+        // Also clear common containers explicitly
+        const stage = document.querySelector('.stage') as HTMLElement | null;
+        if (stage) stage.scrollTop = 0;
+        const main = document.querySelector('main') as HTMLElement | null;
+        if (main) main.scrollTop = 0;
+
+        // trigger a resize to force layout reflow if any components rely on it
+        try {
+          window.dispatchEvent(new Event('resize'));
+          // force reflow
+          void document.body.offsetHeight;
+        } catch (e) {
+          // ignore
+        }
+      };
+
+      resetAllScrolls();
 
       // if the route contains a hash, scroll that element into view once mounted
       if (location.hash) {
@@ -222,7 +258,8 @@ export default function App() {
         setTimeout(() => {
           const el = document.getElementById(id);
           if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 60);
+          else resetAllScrolls();
+        }, 80);
       }
     }, [location.pathname, location.hash]);
 
