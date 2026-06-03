@@ -202,6 +202,30 @@ export default function App() {
     };
   }, []);
 
+    // Ensure SPA navigation focuses top of the new page and honors hash anchors.
+    // This prevents the problem where content for the newly chosen tab is off-screen
+    // or only visible after a manual refresh.
+    useEffect(() => {
+      try {
+        if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+      } catch (e) {
+        // ignore (some envs may restrict history)
+      }
+
+      // immediate reset to top for new route
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+
+      // if the route contains a hash, scroll that element into view once mounted
+      if (location.hash) {
+        const id = location.hash.replace('#', '');
+        // slight delay to allow mounted content/layout to settle
+        setTimeout(() => {
+          const el = document.getElementById(id);
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 60);
+      }
+    }, [location.pathname, location.hash]);
+
   const isLanding = location.pathname === '/';
 
   return (
