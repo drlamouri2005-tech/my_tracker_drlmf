@@ -15,6 +15,7 @@ import { CalendarPage } from './pages/Calendar';
 import { Notes } from './pages/Notes';
 import { Translation } from './pages/Translation';
 import { Profile } from './pages/Profile';
+import { StudyingMusic } from './pages/StudyingMusic';
 
 export default function App() {
   const theme = useStore((s) => s.theme);
@@ -286,6 +287,7 @@ export default function App() {
                 <Route path="/modules" element={<Modules />} />
                 <Route path="/modules/:id" element={<ModuleDetail />} />
                 <Route path="/tasks" element={<Tasks />} />
+                <Route path="/music" element={<StudyingMusic />} />
                 <Route path="/focus" element={<Focus />} />
                 <Route path="/calendar" element={<CalendarPage />} />
                 <Route path="/notes" element={<Notes />} />

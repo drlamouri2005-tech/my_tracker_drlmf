@@ -6,6 +6,7 @@ import {
   Timer,
   NotebookText,
   Trophy,
+  Music,
 } from 'lucide-react';
 
 const items = [
@@ -13,6 +14,7 @@ const items = [
   { to: '/modules', icon: BookOpenText },
   { to: '/tasks', icon: ListTodo },
   { to: '/focus', icon: Timer },
+  { to: '/music', icon: Music },
   { to: '/notes', icon: NotebookText },
   { to: '/profile', icon: Trophy },
 ];

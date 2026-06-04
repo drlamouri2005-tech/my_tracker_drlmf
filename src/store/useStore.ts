@@ -362,7 +362,13 @@ export const useStore = create<StoreState>()(
       setMusicTrack: (t) => set(() => ({ musicTrack: t ?? null })),
       addUserTrack: (name, dataUrl) =>
         set((s) => ({ userTracks: [{ id: crypto.randomUUID(), name, dataUrl, createdAt: Date.now() }, ...s.userTracks] })),
-      removeUserTrack: (id) => set((s) => ({ userTracks: s.userTracks.filter((t) => t.id !== id) })),
+      removeUserTrack: (id) =>
+        set((s) => {
+          const removed = s.userTracks.find((t) => t.id === id);
+          const nextTracks = s.userTracks.filter((t) => t.id !== id);
+          const nextMusicTrack = removed && s.musicTrack === removed.dataUrl ? null : s.musicTrack;
+          return { userTracks: nextTracks, musicTrack: nextMusicTrack } as any;
+        }),
 
       cycleMotivation: () => set((s) => ({ motivationIndex: s.motivationIndex + 1 })),
     }),
