@@ -32,6 +32,10 @@ interface StoreState {
   setMusicOn: (on: boolean) => void;
   setMusicVolume: (v: number) => void;
   setMusicTrack: (t?: string | null) => void;
+  // persisted user-uploaded tracks
+  userTracks: import('../types').UserTrack[];
+  addUserTrack: (name: string, dataUrl: string) => void;
+  removeUserTrack: (id: string) => void;
 
   // module/lesson ops
   updateLesson: (moduleId: string, lessonId: string, patch: Partial<Lesson>) => void;
@@ -103,6 +107,7 @@ export const useStore = create<StoreState>()(
       musicOn: true,
       musicVolume: 0.6,
       musicTrack: null,
+      userTracks: [],
       player: {
         name: 'Doctor',
         title: 'Practicing Physician',
@@ -208,6 +213,7 @@ export const useStore = create<StoreState>()(
               recurrence: 'none',
               done: false,
               createdAt: Date.now(),
+              completedAt: undefined,
               order: s.tasks.length,
             },
           ],
@@ -226,7 +232,14 @@ export const useStore = create<StoreState>()(
       toggleTask: (id) => {
         const t = get().tasks.find((x) => x.id === id);
         if (!t) return;
-        set((s) => ({ tasks: s.tasks.map((x) => (x.id === id ? { ...x, done: !x.done } : x)) }));
+        const now = Date.now();
+        set((s) => ({
+          tasks: s.tasks.map((x) =>
+            x.id === id
+              ? { ...x, done: !x.done, completedAt: !x.done ? now : undefined }
+              : x,
+          ),
+        }));
         if (!t.done) get().awardXP(8, 'task');
       },
 
@@ -347,6 +360,9 @@ export const useStore = create<StoreState>()(
       setMusicOn: (on) => set(() => ({ musicOn: on })),
       setMusicVolume: (v) => set(() => ({ musicVolume: Math.max(0, Math.min(1, v)) })),
       setMusicTrack: (t) => set(() => ({ musicTrack: t ?? null })),
+      addUserTrack: (name, dataUrl) =>
+        set((s) => ({ userTracks: [{ id: crypto.randomUUID(), name, dataUrl, createdAt: Date.now() }, ...s.userTracks] })),
+      removeUserTrack: (id) => set((s) => ({ userTracks: s.userTracks.filter((t) => t.id !== id) })),
 
       cycleMotivation: () => set((s) => ({ motivationIndex: s.motivationIndex + 1 })),
     }),
@@ -365,6 +381,7 @@ export const useStore = create<StoreState>()(
         next.musicOn = next.musicOn ?? true;
         next.musicVolume = next.musicVolume ?? 0.6;
         next.musicTrack = next.musicTrack ?? null;
+        next.userTracks = next.userTracks ?? [];
         next.player = {
           name: 'Doctor',
           title: 'Practicing Physician',

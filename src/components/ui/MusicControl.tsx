@@ -12,7 +12,8 @@ export function MusicControl() {
   const setMusicTrackStore = useStore((s) => s.setMusicTrack);
 
   const [manifest, setManifest] = useState<string[]>([]);
-  const [localTracks, setLocalTracks] = useState<{ name: string; url: string }[]>([]);
+  const userTracks = useStore((s) => s.userTracks);
+  const addUserTrack = useStore((s) => s.addUserTrack);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -34,19 +35,19 @@ export function MusicControl() {
   // react to store changes
   useEffect(() => {
     if (musicOn) {
-      const src = musicTrack ?? (manifest[0] ?? localTracks[0]?.url ?? null);
+      const src = musicTrack ?? (manifest[0] ?? userTracks[0]?.dataUrl ?? null);
       if (src) playTrack(src, musicVolume, true);
     } else {
       stop();
     }
     setVolume(musicVolume);
-  }, [musicOn, musicTrack, musicVolume, manifest, localTracks]);
+  }, [musicOn, musicTrack, musicVolume, manifest, userTracks]);
 
   // try autoplay: if blocked, we'll retry on first interaction
   useEffect(() => {
     if (!musicOn) return;
     const tryPlay = async () => {
-      const src = musicTrack ?? (manifest[0] ?? localTracks[0]?.url ?? null);
+      const src = musicTrack ?? (manifest[0] ?? userTracks[0]?.dataUrl ?? null);
       if (!src) return;
       try {
         playTrack(src, musicVolume, true);
@@ -83,12 +84,15 @@ export function MusicControl() {
   const onAddLocal = (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const f = files[0];
-    const url = URL.createObjectURL(f);
-    const name = f.name;
-    setLocalTracks((s) => [{ name, url }, ...s]);
-    setMusicTrackStore(url);
-    setMusicOn(true);
-    if (fileRef.current) fileRef.current.value = '';
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      addUserTrack(f.name, dataUrl);
+      setMusicTrackStore(dataUrl);
+      setMusicOn(true);
+      if (fileRef.current) fileRef.current.value = '';
+    };
+    reader.readAsDataURL(f);
   };
 
   return (
@@ -116,8 +120,8 @@ export function MusicControl() {
               {m.replace('/audio/', '')}
             </option>
           ))}
-          {localTracks.map((t) => (
-            <option key={t.url} value={t.url}>
+          {userTracks.map((t) => (
+            <option key={t.id} value={t.dataUrl}>
               {t.name}
             </option>
           ))}

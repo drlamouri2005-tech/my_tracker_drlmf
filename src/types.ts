@@ -43,6 +43,14 @@ export interface Task {
   createdAt: number;
   order: number;
   moduleId?: string;
+  completedAt?: number; // timestamp when the task was marked done
+}
+
+export interface UserTrack {
+  id: string;
+  name: string;
+  dataUrl: string;
+  createdAt: number;
 }
 
 export interface FocusSession {

@@ -46,7 +46,7 @@ export function Tasks() {
     if (b === 'no-date') return -1;
     return a.localeCompare(b);
   });
-  const done = tasks.filter((t) => t.done);
+  const done = tasks.filter((t) => t.done).sort((a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0));
 
   return (
     <div className="space-y-8 pt-2">
@@ -188,7 +188,12 @@ export function Tasks() {
                 >
                   <Check size={12} className="text-beige-200" />
                 </button>
-                <span className="flex-1 text-sm text-beige-100/40 line-through">{t.title}</span>
+                <div className="flex-1">
+                  <div className="text-sm text-beige-100/40 line-through">{t.title}</div>
+                  {t.completedAt && (
+                    <div className="text-[11px] text-beige-100/30">{new Date(t.completedAt).toLocaleString()}</div>
+                  )}
+                </div>
                 <button
                   onClick={() => removeTask(t.id)}
                   className="opacity-0 group-hover:opacity-50 hover:!opacity-100 transition text-beige-100/40"
