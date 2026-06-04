@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useMemo, useState } from 'react';
 import { ArrowLeft, CheckCircle2, Circle, CircleDot, RotateCcw, Plus, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -17,7 +17,8 @@ const STATUS_META: Record<LessonStatus, { label: string; color: string; icon: Re
 
 export function ModuleDetail() {
   const { id } = useParams();
-  const { modules, updateLesson, awardXP, registerActivity, addLesson, removeLesson } = useStore();
+  const { modules, updateLesson, awardXP, registerActivity, addLesson, removeLesson, removeModule } = useStore();
+  const navigate = useNavigate();
   const m = modules.find((x) => x.id === id);
   const [newTitle, setNewTitle] = useState('');
   const [filter, setFilter] = useState<LessonStatus | 'all'>('all');
@@ -50,6 +51,12 @@ export function ModuleDetail() {
     if (!newTitle.trim()) return;
     addLesson(m!.id, newTitle.trim());
     setNewTitle('');
+  };
+
+  const onDeleteModule = () => {
+    if (!confirm(`Remove module ${m.code}? This will delete related tasks, notes and calendar events.`)) return;
+    removeModule(m.id);
+    navigate('/modules');
   };
 
   return (
@@ -85,6 +92,9 @@ export function ModuleDetail() {
               <span className="chip">{progress.studying} studying</span>
               <span className="chip">{progress.revision} in revision</span>
               {m.examDate && <span className="chip">Exam · {m.examDate}</span>}
+              <button onClick={onDeleteModule} className="btn-ghost ml-2">
+                Delete module
+              </button>
             </div>
           </div>
         </div>

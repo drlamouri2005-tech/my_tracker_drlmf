@@ -37,6 +37,8 @@ interface StoreState {
   updateLesson: (moduleId: string, lessonId: string, patch: Partial<Lesson>) => void;
   addLesson: (moduleId: string, title: string, subgroup?: string) => void;
   removeLesson: (moduleId: string, lessonId: string) => void;
+  addModule: (opts: { code: string; name: string; short?: string; color?: string; description?: string; examDate?: string }) => void;
+  removeModule: (moduleId: string) => void;
   resetCurriculum: () => void;
   setModuleExamDate: (moduleId: string, date?: string | null) => void;
 
@@ -164,6 +166,32 @@ export const useStore = create<StoreState>()(
             const reindexed = filtered.map((l, i) => ({ ...l, index: i }));
             return { ...m, lessons: reindexed };
           }),
+        })),
+
+      addModule: (opts) =>
+        set((s) => ({
+          modules: [
+            ...s.modules,
+            {
+              id: crypto.randomUUID(),
+              code: opts.code,
+              name: opts.name,
+              short: opts.short ?? opts.name,
+              color: opts.color ?? '#7C7060',
+              accent: opts.color ?? '#D9C7A7',
+              examDate: opts.examDate ?? undefined,
+              description: opts.description ?? undefined,
+              lessons: [],
+            },
+          ],
+        })),
+
+      removeModule: (moduleId) =>
+        set((s) => ({
+          modules: s.modules.filter((m) => m.id !== moduleId),
+          tasks: s.tasks.filter((t) => t.moduleId !== moduleId),
+          notes: s.notes.filter((n) => n.moduleId !== moduleId),
+          calendarEvents: s.calendarEvents.filter((c) => c.moduleId !== moduleId),
         })),
 
       addTask: (title, priority = 'med', moduleId, dueDate) =>
