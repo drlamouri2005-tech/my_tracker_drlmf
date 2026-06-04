@@ -35,11 +35,13 @@ interface StoreState {
 
   // module/lesson ops
   updateLesson: (moduleId: string, lessonId: string, patch: Partial<Lesson>) => void;
+  addLesson: (moduleId: string, title: string, subgroup?: string) => void;
+  removeLesson: (moduleId: string, lessonId: string) => void;
   resetCurriculum: () => void;
   setModuleExamDate: (moduleId: string, date?: string | null) => void;
 
   // tasks
-  addTask: (title: string, priority?: Task['priority'], moduleId?: string) => void;
+  addTask: (title: string, priority?: Task['priority'], moduleId?: string, dueDate?: string) => void;
   updateTask: (id: string, patch: Partial<Task>) => void;
   removeTask: (id: string) => void;
   reorderTasks: (ids: string[]) => void;
@@ -128,7 +130,43 @@ export const useStore = create<StoreState>()(
           modules: s.modules.map((m) => (m.id === moduleId ? { ...m, examDate: date ?? undefined } : m)),
         })),
 
-      addTask: (title, priority = 'med', moduleId) =>
+      addLesson: (moduleId, title, subgroup) =>
+        set((s) => ({
+          modules: s.modules.map((m) => {
+            if (m.id !== moduleId) return m;
+            const nextLessons = [
+              ...m.lessons,
+              {
+                id: crypto.randomUUID(),
+                moduleId: m.id,
+                index: m.lessons.length,
+                title,
+                subgroup: subgroup ?? undefined,
+                status: 'todo' as const,
+                confidence: 0,
+                durationMin: 0,
+                priority: 'med' as const,
+                notes: '',
+                revisions: 0,
+                updatedAt: Date.now(),
+              },
+            ];
+            return { ...m, lessons: nextLessons };
+          }),
+        })),
+
+      removeLesson: (moduleId, lessonId) =>
+        set((s) => ({
+          modules: s.modules.map((m) => {
+            if (m.id !== moduleId) return m;
+            const filtered = m.lessons.filter((l) => l.id !== lessonId);
+            // reindex
+            const reindexed = filtered.map((l, i) => ({ ...l, index: i }));
+            return { ...m, lessons: reindexed };
+          }),
+        })),
+
+      addTask: (title, priority = 'med', moduleId, dueDate) =>
         set((s) => ({
           tasks: [
             ...s.tasks,
@@ -138,6 +176,7 @@ export const useStore = create<StoreState>()(
               tags: [],
               priority,
               moduleId,
+              dueDate: dueDate ?? undefined,
               recurrence: 'none',
               done: false,
               createdAt: Date.now(),

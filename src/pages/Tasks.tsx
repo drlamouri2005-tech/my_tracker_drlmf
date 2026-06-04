@@ -15,15 +15,37 @@ export function Tasks() {
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState<Priority>('med');
   const [moduleId, setModuleId] = useState<string>('');
+  const [dueDate, setDueDate] = useState<string>('');
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    addTask(title.trim(), priority, moduleId || undefined);
+    addTask(title.trim(), priority, moduleId || undefined, dueDate || undefined);
     setTitle('');
+    setDueDate('');
   };
 
-  const open = tasks.filter((t) => !t.done).sort((a, b) => a.order - b.order);
+  // group open tasks by due date (ISO YYYY-MM-DD), tasks without a date go last
+  const openTasks = tasks
+    .filter((t) => !t.done)
+    .sort((a, b) => {
+      if (a.dueDate && b.dueDate) return a.dueDate.localeCompare(b.dueDate) || a.order - b.order;
+      if (a.dueDate) return -1;
+      if (b.dueDate) return 1;
+      return a.order - b.order;
+    });
+
+  const groups = openTasks.reduce<Record<string, typeof tasks>>((acc, t) => {
+    const key = t.dueDate ?? 'no-date';
+    (acc[key] = acc[key] ?? []).push(t);
+    return acc;
+  }, {} as Record<string, typeof tasks>);
+
+  const orderedKeys = Object.keys(groups).sort((a, b) => {
+    if (a === 'no-date') return 1;
+    if (b === 'no-date') return -1;
+    return a.localeCompare(b);
+  });
   const done = tasks.filter((t) => t.done);
 
   return (
@@ -55,6 +77,12 @@ export function Tasks() {
             </option>
           ))}
         </select>
+        <input
+          type="date"
+          value={dueDate}
+          onChange={(e) => setDueDate(e.target.value)}
+          className="bg-ink-800 border border-beige-300/10 rounded-lg px-2 py-1.5 text-sm text-beige-100/80"
+        />
         <div className="flex items-center gap-1">
           {(['low', 'med', 'high'] as Priority[]).map((p) => (
             <button
@@ -81,45 +109,59 @@ export function Tasks() {
         </button>
       </form>
 
-      <div className="grid md:grid-cols-2 gap-5">
-        <Section title="In progress" sub={`${open.length} open`}>
+        <div className="grid md:grid-cols-2 gap-5">
+        <Section title="In progress" sub={`${openTasks.length} open`}>
           <AnimatePresence>
-            {open.length === 0 && (
+            {openTasks.length === 0 && (
               <div className="text-beige-100/40 text-sm py-6 text-center">All clear.</div>
             )}
-            {open.map((t) => (
-              <motion.div
-                layout
-                key={t.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                className="group flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/[0.02] border border-beige-300/[0.06]"
-              >
-                <button
-                  onClick={() => toggleTask(t.id)}
-                  className="w-6 h-6 rounded-md border border-beige-300/30 grid place-items-center hover:bg-beige-300/10 transition"
-                >
-                  <Check size={12} className="opacity-0" />
-                </button>
-                <span
-                  className="w-1.5 h-1.5 rounded-full"
-                  style={{ background: priorityMeta[t.priority].color }}
-                />
-                <span className="flex-1 text-sm text-beige-100/85">{t.title}</span>
-                {t.moduleId && (
-                  <span className="label-mono">
-                    {modules.find((m) => m.id === t.moduleId)?.code}
-                  </span>
-                )}
-                <button
-                  onClick={() => removeTask(t.id)}
-                  className="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition text-beige-100/60"
-                  title="Remove"
-                >
-                  <Trash2 size={13} />
-                </button>
-              </motion.div>
+
+            {orderedKeys.map((key) => (
+              <div key={key}>
+                <div className="label-mono mt-2 mb-2">
+                  {key === 'no-date' ? 'No date' : (() => {
+                    const today = new Date().toISOString().slice(0,10);
+                    const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0,10);
+                    if (key === today) return 'Today';
+                    if (key === tomorrow) return 'Tomorrow';
+                    try { return new Date(key).toLocaleDateString(); } catch { return key; }
+                  })()} · {groups[key].length}
+                </div>
+                {groups[key].map((t) => (
+                  <motion.div
+                    layout
+                    key={t.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    className="group flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/[0.02] border border-beige-300/[0.06]"
+                  >
+                    <button
+                      onClick={() => toggleTask(t.id)}
+                      className="w-6 h-6 rounded-md border border-beige-300/30 grid place-items-center hover:bg-beige-300/10 transition"
+                    >
+                      <Check size={12} className="opacity-0" />
+                    </button>
+                    <span
+                      className="w-1.5 h-1.5 rounded-full"
+                      style={{ background: priorityMeta[t.priority].color }}
+                    />
+                    <span className="flex-1 text-sm text-beige-100/85">{t.title}</span>
+                    {t.moduleId && (
+                      <span className="label-mono">
+                        {modules.find((m) => m.id === t.moduleId)?.code}
+                      </span>
+                    )}
+                    <button
+                      onClick={() => removeTask(t.id)}
+                      className="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition text-beige-100/60"
+                      title="Remove"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </motion.div>
+                ))}
+              </div>
             ))}
           </AnimatePresence>
         </Section>

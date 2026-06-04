@@ -1,6 +1,6 @@
 import { Link, useParams } from 'react-router-dom';
 import { useMemo, useState } from 'react';
-import { ArrowLeft, CheckCircle2, Circle, CircleDot, RotateCcw } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Circle, CircleDot, RotateCcw, Plus, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { selectModuleProgress, useStore } from '../store';
 import { Ring } from '../components/ui/Ring';
@@ -17,8 +17,9 @@ const STATUS_META: Record<LessonStatus, { label: string; color: string; icon: Re
 
 export function ModuleDetail() {
   const { id } = useParams();
-  const { modules, updateLesson, awardXP, registerActivity } = useStore();
+  const { modules, updateLesson, awardXP, registerActivity, addLesson, removeLesson } = useStore();
   const m = modules.find((x) => x.id === id);
+  const [newTitle, setNewTitle] = useState('');
   const [filter, setFilter] = useState<LessonStatus | 'all'>('all');
 
   const progress = useMemo(() => (m ? selectModuleProgress(m) : null), [m]);
@@ -43,6 +44,12 @@ export function ModuleDetail() {
     if (next === 'mastered') awardXP(20, 'lesson');
     if (next === 'studying') awardXP(4, 'lesson-start');
     registerActivity();
+  };
+
+  const onAdd = () => {
+    if (!newTitle.trim()) return;
+    addLesson(m!.id, newTitle.trim());
+    setNewTitle('');
   };
 
   return (
@@ -108,6 +115,20 @@ export function ModuleDetail() {
         })}
       </div>
 
+      <div className="mt-3 hud-frame p-4">
+        <div className="flex items-center gap-2">
+          <input
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+            placeholder="New lesson title…"
+            className="flex-1 bg-transparent outline-none text-beige-100 placeholder-beige-100/30 px-2 py-2"
+          />
+          <button onClick={onAdd} className="btn-primary">
+            <Plus size={14} /> Add
+          </button>
+        </div>
+      </div>
+
       {/* Lessons list */}
       <div className="hud-frame overflow-hidden">
         <span className="corner-mark border-t border-l top-2 left-2" />
@@ -150,6 +171,15 @@ export function ModuleDetail() {
                 <div className="hidden md:block label-mono opacity-50">
                   {String(i + 1).padStart(2, '0')}
                 </div>
+                <button
+                  onClick={() => {
+                    if (confirm('Remove lesson? This cannot be undone.')) removeLesson(m.id, l.id);
+                  }}
+                  className="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition text-beige-100/60 ml-2"
+                  title="Remove lesson"
+                >
+                  <Trash2 size={14} />
+                </button>
               </motion.li>
             );
           })}
