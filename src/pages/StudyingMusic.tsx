@@ -11,6 +11,7 @@ export function StudyingMusic() {
   const setMusicTrack = useStore((s) => s.setMusicTrack);
   const userTracks = useStore((s) => s.userTracks);
   const addUserTrack = useStore((s) => s.addUserTrack);
+  const addUserTrackFromFile = useStore((s) => s.addUserTrackFromFile);
   const removeUserTrack = useStore((s) => s.removeUserTrack);
 
   const [manifest, setManifest] = useState<string[]>([]);
@@ -38,18 +39,29 @@ export function StudyingMusic() {
     setMusicOn(true);
   };
 
-  const onAddLocal = (files: FileList | null) => {
+  const onAddLocal = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const f = files[0];
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
-      addUserTrack(f.name, dataUrl);
-      setMusicTrack(dataUrl);
-      setMusicOn(true);
-      if (fileRef.current) fileRef.current.value = '';
-    };
-    reader.readAsDataURL(f);
+    if (addUserTrackFromFile) {
+      const id = await addUserTrackFromFile(f as File);
+      if (id) {
+        const ref = `idb:${id}`;
+        setMusicTrack(ref);
+        setMusicOn(true);
+      }
+    } else {
+      // fallback: read as data URL
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result as string;
+        addUserTrack(f.name, dataUrl);
+        setMusicTrack(dataUrl);
+        setMusicOn(true);
+        if (fileRef.current) fileRef.current.value = '';
+      };
+      reader.readAsDataURL(f);
+    }
+    if (fileRef.current) fileRef.current.value = '';
   };
 
   return (

@@ -11,6 +11,7 @@ import type {
   Task,
   CalendarEvent,
 } from '../types';
+import { saveTrackBlob, deleteTrackBlob } from '../lib/idbTracks';
 
 export type Theme = 'dark' | 'light';
 
@@ -35,6 +36,7 @@ interface StoreState {
   // persisted user-uploaded tracks
   userTracks: import('../types').UserTrack[];
   addUserTrack: (name: string, dataUrl: string) => void;
+  addUserTrackFromFile: (file: File) => Promise<string | null>;
   removeUserTrack: (id: string) => void;
 
   // module/lesson ops
@@ -362,11 +364,32 @@ export const useStore = create<StoreState>()(
       setMusicTrack: (t) => set(() => ({ musicTrack: t ?? null })),
       addUserTrack: (name, dataUrl) =>
         set((s) => ({ userTracks: [{ id: crypto.randomUUID(), name, dataUrl, createdAt: Date.now() }, ...s.userTracks] })),
+      addUserTrackFromFile: async (file: File) => {
+        const id = crypto.randomUUID();
+        // record metadata in the store referencing the IDB entry
+        set((s) => ({ userTracks: [{ id, name: file.name, dataUrl: `idb:${id}`, createdAt: Date.now() }, ...s.userTracks] }));
+        try {
+          await saveTrackBlob(id, file);
+          return id;
+        } catch (e) {
+          // rollback metadata on failure
+          set((s) => ({ userTracks: s.userTracks.filter((t) => t.id !== id) }));
+          return null;
+        }
+      },
       removeUserTrack: (id) =>
         set((s) => {
           const removed = s.userTracks.find((t) => t.id === id);
           const nextTracks = s.userTracks.filter((t) => t.id !== id);
           const nextMusicTrack = removed && s.musicTrack === removed.dataUrl ? null : s.musicTrack;
+          // attempt to delete blob from IndexedDB asynchronously
+          (async () => {
+            try {
+              await deleteTrackBlob(id);
+            } catch (e) {
+              // ignore
+            }
+          })();
           return { userTracks: nextTracks, musicTrack: nextMusicTrack } as any;
         }),
 

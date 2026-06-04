@@ -14,6 +14,7 @@ export function MusicControl() {
   const [manifest, setManifest] = useState<string[]>([]);
   const userTracks = useStore((s) => s.userTracks);
   const addUserTrack = useStore((s) => s.addUserTrack);
+  const addUserTrackFromFile = useStore((s) => s.addUserTrackFromFile);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -84,6 +85,17 @@ export function MusicControl() {
   const onAddLocal = (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const f = files[0];
+    if (addUserTrackFromFile) {
+      addUserTrackFromFile(f as File).then((id) => {
+        if (id) {
+          const ref = `idb:${id}`;
+          setMusicTrackStore(ref);
+          setMusicOn(true);
+        }
+        if (fileRef.current) fileRef.current.value = '';
+      });
+      return;
+    }
     const reader = new FileReader();
     reader.onload = () => {
       const dataUrl = reader.result as string;
