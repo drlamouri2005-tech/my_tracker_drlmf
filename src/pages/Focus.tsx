@@ -10,12 +10,13 @@ const PRESETS = [
 ];
 
 export function Focus() {
-  const { modules, addSession, awardXP, registerActivity, sessions, removeSession } = useStore();
+  const { modules, addSession, awardXP, registerActivity, sessions, removeSession, tasks } = useStore();
   const [preset, setPreset] = useState(0);
   const [mode, setMode] = useState<'work' | 'break'>('work');
   const [running, setRunning] = useState(false);
   const [remaining, setRemaining] = useState(PRESETS[0].work * 60);
   const [moduleId, setModuleId] = useState<string>('');
+  const [lessonId, setLessonId] = useState<string>('');
   const [showDebug, setShowDebug] = useState(false);
   const startedAtRef = useRef<number | null>(null);
 
@@ -28,6 +29,10 @@ export function Focus() {
     setRunning(false);
     startedAtRef.current = null;
   }, [preset, mode, current.work, current.break]);
+
+  useEffect(() => {
+    setLessonId('');
+  }, [moduleId]);
 
   useEffect(() => {
     if (!running) return;
@@ -55,6 +60,7 @@ export function Focus() {
       const dur = Math.floor((endedAt - startedAt) / 1000);
       addSession({
         moduleId: moduleId || undefined,
+        lessonId: lessonId || undefined,
         durationSec: dur,
         startedAt,
         endedAt,
@@ -94,6 +100,7 @@ export function Focus() {
       if (dur > 30) {
         addSession({
           moduleId: moduleId || undefined,
+          lessonId: lessonId || undefined,
           durationSec: dur,
           startedAt,
           endedAt,
@@ -265,10 +272,13 @@ export function Focus() {
                   const label = started.toLocaleString();
                   const mins = Math.round(s.durationSec / 60);
                   const module = modules.find((m) => m.id === s.moduleId);
+                  const lesson = modules
+                    .flatMap((m) => m.lessons.map((l) => ({ ...l, moduleId: m.id })))
+                    .find((l) => l.id === s.lessonId);
                   return (
                     <div key={s.id} className="flex items-center justify-between gap-3 p-2 rounded-md bg-white/[0.02]">
                       <div>
-                        <div className="text-sm text-beige-100/90">{module ? `${module.code} · ${module.name}` : 'Unassigned'}</div>
+                        <div className="text-sm text-beige-100/90">{lesson ? `${lesson.title}` : module ? `${module.code} · ${module.name}` : 'Unassigned'}</div>
                         <div className="label-mono text-[11px]">{label} · {mins}m</div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -308,6 +318,72 @@ export function Focus() {
                 </option>
               ))}
             </select>
+            <div className="mt-3">
+              <div className="label-mono mb-2">Target Lesson</div>
+              <select
+                value={lessonId}
+                onChange={(e) => setLessonId(e.target.value)}
+                className="w-full bg-ink-800/60 border border-beige-300/10 rounded-lg px-3 py-2.5 text-sm text-beige-100/85 outline-none focus:border-beige-300/30"
+              >
+                <option value="">Unassigned</option>
+                {moduleId &&
+                  modules
+                    .find((m) => m.id === moduleId)
+                    ?.lessons.map((l) => (
+                      <option key={l.id} value={l.id}>
+                        {l.title}
+                      </option>
+                    ))}
+              </select>
+            </div>
+
+          <div className="hud-frame p-5 relative">
+            <div className="label-mono mb-3">Related Tasks</div>
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {(() => {
+                const list = lessonId
+                  ? tasks.filter((t) => t.lessonId === lessonId && !t.done)
+                  : moduleId
+                  ? tasks.filter((t) => t.moduleId === moduleId && !t.done)
+                  : [];
+                if (list.length === 0) return <div className="text-sm text-beige-100/60">No related tasks.</div>;
+                return list.map((t) => (
+                  <div key={t.id} className="flex items-center justify-between gap-3 p-2 rounded-md bg-white/[0.01]">
+                    <div className="flex-1">
+                      <div className="text-sm text-beige-100/85">{t.title}</div>
+                      <div className="label-mono text-[11px]">{t.priority}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          setModuleId(t.moduleId ?? '');
+                          setLessonId(t.lessonId ?? '');
+                        }}
+                        className="btn-ghost p-2 rounded-md"
+                        title="Select"
+                      >
+                        Select
+                      </button>
+                      <button
+                        onClick={() => {
+                          setModuleId(t.moduleId ?? '');
+                          setLessonId(t.lessonId ?? '');
+                          if (!running) {
+                            if (!startedAtRef.current && mode === 'work') startedAtRef.current = Date.now();
+                            setRunning(true);
+                          }
+                        }}
+                        className="btn-primary px-3"
+                        title="Start focus"
+                      >
+                        Start
+                      </button>
+                    </div>
+                  </div>
+                ));
+              })()}
+            </div>
+          </div>
             <p className="mt-3 text-[12px] text-beige-100/45 leading-relaxed">
               Choose your focus subject to log the session against a module. XP and time will
               compound silently behind the scenes.

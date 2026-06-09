@@ -43,6 +43,7 @@ export interface Task {
   createdAt: number;
   order: number;
   moduleId?: string;
+  lessonId?: string; // optional link to a lesson
   completedAt?: number; // timestamp when the task was marked done
 }
 

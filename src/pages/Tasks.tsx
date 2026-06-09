@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Trash2, Check } from 'lucide-react';
 import { useStore } from '../store';
@@ -15,12 +15,18 @@ export function Tasks() {
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState<Priority>('med');
   const [moduleId, setModuleId] = useState<string>('');
+  const [lessonId, setLessonId] = useState<string>('');
   const [dueDate, setDueDate] = useState<string>('');
+
+  // reset lesson selection when module changes
+  useEffect(() => {
+    setLessonId('');
+  }, [moduleId]);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    addTask(title.trim(), priority, moduleId || undefined, dueDate || undefined);
+    addTask(title.trim(), priority, moduleId || undefined, lessonId || undefined, dueDate || undefined);
     setTitle('');
     setDueDate('');
   };
@@ -76,6 +82,21 @@ export function Tasks() {
               {m.code} · {m.short}
             </option>
           ))}
+        </select>
+        <select
+          value={lessonId}
+          onChange={(e) => setLessonId(e.target.value)}
+          className="bg-ink-800 border border-beige-300/10 rounded-lg px-2 py-1.5 text-sm text-beige-100/80"
+        >
+          <option value="">No lesson</option>
+          {moduleId &&
+            modules
+              .find((m) => m.id === moduleId)
+              ?.lessons.map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.title}
+                </option>
+              ))}
         </select>
         <input
           type="date"
@@ -150,6 +171,16 @@ export function Tasks() {
                     {t.moduleId && (
                       <span className="label-mono">
                         {modules.find((m) => m.id === t.moduleId)?.code}
+                      </span>
+                    )}
+                    {t.lessonId && (
+                      <span className="label-mono ml-2">
+                        {(() => {
+                          const lesson = modules
+                            .flatMap((m) => m.lessons.map((l) => ({ ...l, moduleId: m.id })))
+                            .find((l) => l.id === t.lessonId);
+                          return lesson ? lesson.title : 'Lesson';
+                        })()}
                       </span>
                     )}
                     <button

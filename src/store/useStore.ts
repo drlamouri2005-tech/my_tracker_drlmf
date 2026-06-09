@@ -49,7 +49,7 @@ interface StoreState {
   setModuleExamDate: (moduleId: string, date?: string | null) => void;
 
   // tasks
-  addTask: (title: string, priority?: Task['priority'], moduleId?: string, dueDate?: string) => void;
+  addTask: (title: string, priority?: Task['priority'], moduleId?: string, lessonId?: string, dueDate?: string) => void;
   updateTask: (id: string, patch: Partial<Task>) => void;
   removeTask: (id: string) => void;
   reorderTasks: (ids: string[]) => void;
@@ -201,7 +201,7 @@ export const useStore = create<StoreState>()(
           calendarEvents: s.calendarEvents.filter((c) => c.moduleId !== moduleId),
         })),
 
-      addTask: (title, priority = 'med', moduleId, dueDate) =>
+      addTask: (title, priority = 'med', moduleId, lessonId, dueDate) =>
         set((s) => ({
           tasks: [
             ...s.tasks,
@@ -211,6 +211,7 @@ export const useStore = create<StoreState>()(
               tags: [],
               priority,
               moduleId,
+              lessonId: lessonId ?? undefined,
               dueDate: dueDate ?? undefined,
               recurrence: 'none',
               done: false,
