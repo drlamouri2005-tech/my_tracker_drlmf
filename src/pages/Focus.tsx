@@ -10,7 +10,7 @@ const PRESETS = [
 ];
 
 export function Focus() {
-  const { modules, addSession, awardXP, registerActivity, sessions, removeSession, tasks } = useStore();
+  const { modules, addSession, awardXP, registerActivity, sessions, removeSession, tasks, addTask, toggleTask, removeTask } = useStore();
   const [preset, setPreset] = useState(0);
   const [mode, setMode] = useState<'work' | 'break'>('work');
   const [running, setRunning] = useState(false);
@@ -18,6 +18,11 @@ export function Focus() {
   const [moduleId, setModuleId] = useState<string>('');
   const [lessonId, setLessonId] = useState<string>('');
   const [showDebug, setShowDebug] = useState(false);
+  const [taskTitle, setTaskTitle] = useState('');
+  const [taskPriority, setTaskPriority] = useState<'low'|'med'|'high'>('med');
+  const [taskModuleId, setTaskModuleId] = useState<string>('');
+  const [taskLessonId, setTaskLessonId] = useState<string>('');
+  const [taskDueDate, setTaskDueDate] = useState<string>('');
   const startedAtRef = useRef<number | null>(null);
 
   const current = PRESETS[preset];
@@ -33,6 +38,10 @@ export function Focus() {
   useEffect(() => {
     setLessonId('');
   }, [moduleId]);
+
+  useEffect(() => {
+    setTaskLessonId('');
+  }, [taskModuleId]);
 
   useEffect(() => {
     if (!running) return;
@@ -133,10 +142,10 @@ export function Focus() {
         </button>
       </div>
       <div>
-        <div className="label-mono mb-2">◓ DEEP FOCUS</div>
-        <h1 className="font-display text-4xl md:text-5xl tracking-tight">The operating theatre.</h1>
+        <div className="label-mono mb-2">◓ FOCUS & TASKS</div>
+        <h1 className="font-display text-4xl md:text-5xl tracking-tight">Focus & Tasks</h1>
         <p className="mt-2 text-beige-100/55 max-w-xl">
-          One block. One mind. One mission. The world dims. The work begins.
+          One block. One task. One mission. Focus on what matters and track tasks alongside sessions.
         </p>
       </div>
 
@@ -382,6 +391,80 @@ export function Focus() {
                   </div>
                 ));
               })()}
+            </div>
+          </div>
+          
+          <div className="hud-frame p-5 relative">
+            <div className="label-mono mb-3">Tasks</div>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!taskTitle.trim()) return;
+                addTask(taskTitle.trim(), taskPriority, taskModuleId || undefined, taskLessonId || undefined, taskDueDate || undefined);
+                setTaskTitle('');
+                setTaskDueDate('');
+              }}
+              className="space-y-3"
+            >
+              <input
+                value={taskTitle}
+                onChange={(e) => setTaskTitle(e.target.value)}
+                placeholder="New task…"
+                className="w-full bg-transparent outline-none text-beige-100 placeholder-beige-100/30 px-2 py-2"
+              />
+              <div className="flex gap-2">
+                <select value={taskModuleId} onChange={(e) => setTaskModuleId(e.target.value)} className="flex-1 bg-ink-800 border border-beige-300/10 rounded-lg px-2 py-1.5 text-sm">
+                  <option value="">No module</option>
+                  {modules.map((m) => <option key={m.id} value={m.id}>{m.code} · {m.short}</option>)}
+                </select>
+                <select value={taskLessonId} onChange={(e) => setTaskLessonId(e.target.value)} className="flex-1 bg-ink-800 border border-beige-300/10 rounded-lg px-2 py-1.5 text-sm">
+                  <option value="">No lesson</option>
+                  {taskModuleId && modules.find((m) => m.id === taskModuleId)?.lessons.map((l) => <option key={l.id} value={l.id}>{l.title}</option>)}
+                </select>
+              </div>
+              <div className="flex items-center gap-2">
+                <input type="date" value={taskDueDate} onChange={(e) => setTaskDueDate(e.target.value)} className="bg-ink-800 border border-beige-300/10 rounded-lg px-2 py-1.5 text-sm" />
+                <div className="flex items-center gap-1">
+                  {(['low','med','high'] as const).map((p) => (
+                    <button key={p} type="button" onClick={() => setTaskPriority(p)} className={`chip ${taskPriority===p? '!text-beige-100 !border-beige-300/40':''}`}>{p}</button>
+                  ))}
+                </div>
+                <button type="submit" className="btn-primary">Add</button>
+              </div>
+            </form>
+
+            <div className="mt-3">
+              <div className="label-mono mb-2">Open</div>
+              <div className="space-y-2 max-h-36 overflow-y-auto">
+                {tasks.filter(t => !t.done).map(t => (
+                  <div key={t.id} className="flex items-center justify-between gap-3 p-2 rounded-md bg-white/[0.01]">
+                    <div className="flex-1">
+                      <div className="text-sm text-beige-100/85">{t.title}</div>
+                      <div className="label-mono text-[11px]">{t.moduleId ? modules.find(m=>m.id===t.moduleId)?.code : ''} {t.lessonId ? (()=>{ const l = modules.flatMap(m=>m.lessons.map(ln=>({...ln, moduleId: m.id}))).find(ln=>ln.id===t.lessonId); return l? `· ${l.title}`:''})():''}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button onClick={()=> toggleTask(t.id)} className="btn-ghost p-2 rounded-md">Done</button>
+                      <button onClick={()=> removeTask(t.id)} className="btn-ghost p-2 rounded-md text-red-400">Del</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="label-mono mt-3 mb-2">Completed</div>
+              <div className="space-y-2 max-h-36 overflow-y-auto">
+                {tasks.filter(t => t.done).map(t => (
+                  <div key={t.id} className="flex items-center justify-between gap-3 p-2 rounded-md bg-white/[0.01]">
+                    <div className="flex-1">
+                      <div className="text-sm text-beige-100/60 line-through">{t.title}</div>
+                      <div className="label-mono text-[11px]">{t.completedAt ? new Date(t.completedAt).toLocaleString() : ''}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button onClick={()=> toggleTask(t.id)} className="btn-ghost p-2 rounded-md">Undo</button>
+                      <button onClick={()=> removeTask(t.id)} className="btn-ghost p-2 rounded-md text-red-400">Del</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
             <p className="mt-3 text-[12px] text-beige-100/45 leading-relaxed">

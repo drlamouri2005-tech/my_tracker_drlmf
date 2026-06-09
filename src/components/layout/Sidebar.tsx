@@ -16,7 +16,7 @@ const items = [
   { to: '/dashboard', label: 'Command', icon: LayoutDashboard },
   { to: '/modules', label: 'Modules', icon: BookOpenText },
   { to: '/tasks', label: 'Tasks', icon: ListTodo },
-  { to: '/focus', label: 'Focus', icon: Timer },
+  { to: '/focus', label: 'Focus & Tasks', icon: Timer },
   { to: '/calendar', label: 'Calendar', icon: CalendarDays },
   { to: '/notes', label: 'Notes', icon: NotebookText },
   { to: '/music', label: 'Studying Music', icon: Music },

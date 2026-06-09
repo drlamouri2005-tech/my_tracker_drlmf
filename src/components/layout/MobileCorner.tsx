@@ -17,6 +17,7 @@ const items = [
   { to: '/modules', label: 'Modules', icon: BookOpenText },
   { to: '/tasks', label: 'Tasks', icon: ListTodo },
   { to: '/focus', label: 'Focus', icon: Timer },
+  { to: '/focus', label: 'Focus & Tasks', icon: Timer },
   { to: '/music', label: 'Studying Music', icon: Music },
   { to: '/notes', label: 'Notes', icon: NotebookText },
   { to: '/translation', label: 'Translation', icon: Languages },
